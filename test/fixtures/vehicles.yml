@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  plate_number: MyString
+  capacity: 1
+  status: MyString
+  driver: one
+
+two:
+  plate_number: MyString
+  capacity: 1
+  status: MyString
+  driver: two
