@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  vehicle: one
+  route: one
+  start_time: 2026-04-27 23:22:53
+  end_time: 2026-04-27 23:22:53
+  status: MyString
+
+two:
+  vehicle: two
+  route: two
+  start_time: 2026-04-27 23:22:53
+  end_time: 2026-04-27 23:22:53
+  status: MyString

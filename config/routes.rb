@@ -11,5 +11,21 @@ Rails.application.routes.draw do
     post "login", to: "auth#login"
     post "drivers/register", to: "drivers#create"
     patch "drivers/:id/approve", to: "drivers#approve"
+    resources :vehicles
+    resources :trips do
+      member do
+        patch :end_trip
+      end
+    end
+    resources :shifts do
+      member do
+        patch :end_shift
+      end
+    end
+    resources :fuel_records, only: [:create, :index]
+    resources :routes
+    resources :shift_assignments
+    resources :expense_records, only: [:create, :index]
+    resources :users, only: [:create, :index, :show]
   end
 end

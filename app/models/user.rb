@@ -10,9 +10,12 @@ class User < ApplicationRecord
   end
 
   def driver?
-    role == "driver"
+    role == "driver" || "admin"
   end
   def active?
     status == "active"
+  end
+  def can_manage_system?
+    role == "admin"
   end
 end
