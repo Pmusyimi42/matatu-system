@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     resources :trips do
       member do
         patch :end_trip
+        get :summary
       end
     end
     resources :shifts do

@@ -51,4 +51,9 @@ end
     trip = Trip.find(params[:id])
     render json: trip
   end
+  def summary
+    trip = Trip.find(params[:id])
+
+    render json: TripSummaryService.new(trip).call, status: :ok
+  end
 end
