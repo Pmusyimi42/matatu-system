@@ -16,7 +16,12 @@ module TenantScoped
   end
 
   class_methods do
-    def unscoped(*)
+    def unscoped(*args, &block)
+      # Allow unscoped during ActiveRecord uniqueness validations
+      if caller_locations.any? { |loc| loc.path&.include?('active_record/validations/uniqueness.rb') }
+        return super(*args, &block)
+      end
+
       raise "❌ Unsafe: unscoped is disabled in multi-tenant mode"
     end
   end
@@ -36,3 +41,4 @@ module TenantScoped
     end
   end
 end
+
