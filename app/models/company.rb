@@ -1,4 +1,3 @@
-# app/models/company.rb
 class Company < ApplicationRecord
   has_many :users, dependent: :destroy
   has_many :vehicles, dependent: :destroy
@@ -9,16 +8,15 @@ class Company < ApplicationRecord
   has_many :fuel_records, dependent: :destroy
 
   def setup_complete?
-    vehicles.any? && routes.any? && users.where(role: "driver").any?
+    vehicles.any? && routes.any? && users.where(role: "driver").exists?
   end
 
   def setup_progress
     {
       has_vehicles: vehicles.any?,
       has_routes: routes.any?,
-      has_drivers: users.where(role: "driver").any?,
+      has_drivers: users.where(role: "driver").exists?,
       complete: setup_complete?
     }
   end
 end
-

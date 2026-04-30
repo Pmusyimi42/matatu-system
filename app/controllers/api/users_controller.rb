@@ -1,27 +1,24 @@
 class Api::UsersController < ApplicationController
   before_action :require_admin, only: [:create]
 
-  # Allow first driver creation during setup
   skip_before_action :check_setup_complete, only: [:create], if: :first_driver?
 
-  # GET /api/users
   def index
     users = Current.company.users
     render json: users
   end
 
-  # GET /api/users/:id
   def show
     user = Current.company.users.find(params[:id])
     render json: user
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "User not found" }, status: :not_found
   end
 
-  # ✅ GET /api/users/me  (VERY IMPORTANT FOR FRONTEND)
   def me
     render json: Current.user
   end
 
-  # POST /api/users
   def create
     user = Current.company.users.new(user_params)
 
@@ -51,9 +48,7 @@ class Api::UsersController < ApplicationController
     end
   end
 
-  # Allow system bootstrap (first driver)
   def first_driver?
     !Current.company&.users&.where(role: "driver")&.exists?
   end
 end
-

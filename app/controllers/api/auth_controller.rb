@@ -33,7 +33,7 @@ class Api::AuthController < ApplicationController
     payload = {
       user_id: user.id,
       company_id: user.company_id,
-      exp: 24.hours.from_now.to_i
+      exp: 7.days.from_now.to_i
     }
     JWT.encode(payload, Rails.application.credentials.secret_key_base, "HS256")
   end

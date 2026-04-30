@@ -11,15 +11,15 @@ class TripPolicy
   end
 
   def create?
-    same_company?
+    same_company? && (user.admin? || user.driver?)
   end
 
   def end_trip?
-    same_company? && (user.admin? || trip_driver_id == user.id)
+    same_company? && (user.admin? || trip_driver?)
   end
 
   def summary?
-    same_company?
+    same_company? && (user.admin? || trip_driver?)
   end
 
   private
@@ -28,10 +28,7 @@ class TripPolicy
     user.company_id == trip.company_id
   end
 
-  def trip_driver_id
-    # Driver is accessed through the vehicle's current driver
-    # or through the active shift assignment
-    trip.vehicle&.driver_id || 
-      ShiftAssignment.find_by(vehicle_id: trip.vehicle_id, status: 'active')&.driver_id
+  def trip_driver?
+    trip.driver_id == user.id
   end
 end

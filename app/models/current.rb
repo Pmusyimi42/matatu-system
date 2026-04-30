@@ -7,4 +7,3 @@ class Current < ActiveSupport::CurrentAttributes
 end
 
 class TenantMissingError < StandardError; end
-

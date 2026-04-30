@@ -5,6 +5,7 @@ class Trip < ApplicationRecord
 
   belongs_to :vehicle
   belongs_to :route
+  belongs_to :driver, class_name: "User", optional: true
   has_many :fuel_records, dependent: :destroy
   has_many :expense_records, dependent: :destroy
 
@@ -13,6 +14,11 @@ class Trip < ApplicationRecord
   validates :cash_proof_photo, presence: true, if: :completed?
 
   before_update :prevent_changes_if_completed
+
+  scope :this_month, -> { where("start_time >= ?", Time.current.beginning_of_month) }
+  scope :for_driver, ->(driver) { where(driver_id: driver.id) }
+  scope :completed, -> { where(status: "completed") }
+  scope :active, -> { where(status: "active") }
 
   def active?
     status == "active"
@@ -27,16 +33,20 @@ class Trip < ApplicationRecord
   end
 
   def complete_trip!(cash_collected:, cash_proof_photo:)
-  transaction do
-    self.cash_proof_photo.attach(cash_proof_photo)
-
-    update!(
-      cash_collected: cash_collected,
-      end_time: Time.current,
-      status: "completed"
-    )
+    transaction do
+      update!(
+        cash_collected: cash_collected,
+        end_time: Time.current,
+        status: "completed"
+      )
+      self.cash_proof_photo.attach(cash_proof_photo)
+    end
   end
-end
+
+  def duration_minutes
+    return nil unless end_time && start_time
+    ((end_time - start_time) / 60).round
+  end
 
   private
 
@@ -52,4 +62,3 @@ end
     end
   end
 end
-

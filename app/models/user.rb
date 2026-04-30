@@ -1,10 +1,9 @@
 class User < ApplicationRecord
-#  include TenantScoped
-
   has_secure_password
 
   belongs_to :company
-  has_many :vehicles, foreign_key: :driver_id
+  has_many :shift_assignments, foreign_key: :driver_id, dependent: :destroy
+  has_many :assigned_vehicles, through: :shift_assignments, source: :vehicle
 
   validates :email, presence: true, uniqueness: true
   validates :role, inclusion: { in: %w[admin driver] }
@@ -15,7 +14,7 @@ class User < ApplicationRecord
   end
 
   def driver?
-    role == "driver" || role == "admin"
+    role == "driver"
   end
 
   def active?
@@ -25,5 +24,12 @@ class User < ApplicationRecord
   def can_manage_system?
     admin?
   end
-end
 
+  def current_shift
+    shift_assignments.find_by(status: "active")
+  end
+
+  def current_vehicle
+    current_shift&.vehicle
+  end
+end

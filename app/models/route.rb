@@ -1,8 +1,7 @@
 class Route < ApplicationRecord
   include TenantScoped
 
-  has_many :trips
+  has_many :trips, dependent: :nullify
 
   validates :origin, :destination, presence: true
 end
-

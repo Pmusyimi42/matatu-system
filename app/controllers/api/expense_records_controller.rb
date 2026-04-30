@@ -19,7 +19,8 @@ class Api::ExpenseRecordsController < ApplicationController
   private
 
   def set_trip
-    @trip = Trip.find(params[:trip_id])
+    scope = Current.user.admin? ? Current.company.trips : Current.company.trips.where(driver_id: Current.user.id)
+    @trip = scope.find(params[:trip_id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Trip not found" }, status: :not_found
   end
@@ -28,4 +29,3 @@ class Api::ExpenseRecordsController < ApplicationController
     params.require(:expense_record).permit(:description, :amount)
   end
 end
-

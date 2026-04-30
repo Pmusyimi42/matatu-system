@@ -4,9 +4,7 @@ class FuelRecord < ApplicationRecord
   belongs_to :trip
   has_one_attached :pump_photo
 
-  before_validation :assign_company
-
-  validates :amount, presence: true
+  validates :amount, presence: true, numericality: { greater_than: 0 }
   validate :pump_photo_attached
   validate :trip_must_be_active
   validate :trip_belongs_to_current_company
@@ -28,11 +26,10 @@ class FuelRecord < ApplicationRecord
   end
 
   def trip_belongs_to_current_company
-    return unless trip
+    return unless trip && Current.company
 
-    if trip.company_id != Current.company&.id
+    if trip.company_id != Current.company.id
       errors.add(:trip, "does not belong to your company")
     end
   end
 end
-

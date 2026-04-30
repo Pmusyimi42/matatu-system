@@ -8,21 +8,23 @@ class Api::FuelRecordsController < ApplicationController
     fuel_record.pump_photo.attach(fuel_record_params[:pump_photo]) if fuel_record_params[:pump_photo].present?
 
     fuel_record.save!
-
     render json: fuel_record, status: :created
   rescue ActiveRecord::RecordInvalid => e
     render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
 
   def index
-    fuel_records = @trip ? @trip.fuel_records : FuelRecord.order(created_at: :desc)
+    fuel_records = @trip.fuel_records.order(created_at: :desc)
     render json: fuel_records
   end
 
   private
 
   def set_trip
-    @trip = Trip.find(params[:trip_id])
+    scope = Current.user.admin? ? Current.company.trips : Current.company.trips.where(driver_id: Current.user.id)
+    @trip = scope.find(params[:trip_id])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Trip not found" }, status: :not_found
   end
 
   def fuel_record_params

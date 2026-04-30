@@ -24,7 +24,7 @@ class Api::DriversController < ApplicationController
   end
 
   def approve
-    driver = User.find(params[:id])
+    driver = Current.company.users.find(params[:id])
 
     unless driver.role == "driver"
       return render json: { error: "Not a driver" }, status: :bad_request
@@ -35,6 +35,8 @@ class Api::DriversController < ApplicationController
     else
       render json: driver.errors, status: :unprocessable_entity
     end
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Driver not found" }, status: :not_found
   end
 
   private

@@ -7,14 +7,15 @@ module Trips
     end
 
     def call
-  raise StandardError, "Photo required" if @params[:cash_proof_photo].blank?
+      raise StandardError, "Cash amount required" if @params[:cash_collected].blank?
+      raise StandardError, "Photo required" if @params[:cash_proof_photo].blank?
 
-  @trip.complete_trip!(
-    cash_collected: @params[:cash_collected],
-    cash_proof_photo: @params[:cash_proof_photo]
-  )
+      @trip.complete_trip!(
+        cash_collected: @params[:cash_collected],
+        cash_proof_photo: @params[:cash_proof_photo]
+      )
 
-  @trip
-end
+      @trip
+    end
   end
 end

@@ -1,18 +1,20 @@
 class Api::VehiclesController < ApplicationController
-  def index
-    vehicles = Vehicle.all
+  before_action :require_admin, only: [:create, :update, :destroy]
 
+  def index
+    vehicles = Current.company.vehicles.includes(:shift_assignments)
     render json: vehicles.as_json(methods: :current_driver)
   end
 
   def show
-    vehicle = Vehicle.find(params[:id])
-
+    vehicle = Current.company.vehicles.find(params[:id])
     render json: vehicle.as_json(methods: :current_driver)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Vehicle not found" }, status: :not_found
   end
 
   def create
-    vehicle = Vehicle.new(vehicle_params)
+    vehicle = Current.company.vehicles.new(vehicle_params)
     vehicle.status = "active"
 
     if vehicle.save
@@ -23,20 +25,24 @@ class Api::VehiclesController < ApplicationController
   end
 
   def update
-    vehicle = Vehicle.find(params[:id])
+    vehicle = Current.company.vehicles.find(params[:id])
 
     if vehicle.update(vehicle_params)
       render json: vehicle
     else
       render json: vehicle.errors, status: :unprocessable_entity
     end
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Vehicle not found" }, status: :not_found
   end
 
   def destroy
-    vehicle = Vehicle.find(params[:id])
+    vehicle = Current.company.vehicles.find(params[:id])
     vehicle.update(status: "inactive")
 
     render json: { message: "Vehicle deactivated (not deleted)" }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Vehicle not found" }, status: :not_found
   end
 
   private
@@ -44,5 +50,10 @@ class Api::VehiclesController < ApplicationController
   def vehicle_params
     params.require(:vehicle).permit(:plate_number, :capacity, :status, :driver_id)
   end
-end
 
+  def require_admin
+    unless Current.user&.admin?
+      render json: { error: "Admin access required" }, status: :forbidden
+    end
+  end
+end

@@ -10,8 +10,10 @@ module Trips
         status: @trip.status,
         start_time: @trip.start_time,
         end_time: @trip.end_time,
+        duration_minutes: @trip.duration_minutes,
         vehicle: vehicle_info,
         route: route_info,
+        driver: driver_info,
         cash_collected: cash_collected.to_f,
         fuel_total: fuel_total.to_f,
         expense_total: expense_total.to_f,
@@ -37,6 +39,15 @@ module Trips
         id: @trip.route.id,
         origin: @trip.route.origin,
         destination: @trip.route.destination
+      }
+    end
+
+    def driver_info
+      return nil unless @trip.driver
+
+      {
+        id: @trip.driver.id,
+        name: @trip.driver.name
       }
     end
 

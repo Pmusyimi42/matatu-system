@@ -31,21 +31,55 @@ class Api::TripsController < ApplicationController
 
   def show
     authorize!(@trip)
-    render json: @trip
+    render json: @trip.as_json(
+      methods: [:duration_minutes],
+      include: [:vehicle, :route, :driver, :fuel_records, :expense_records]
+    )
   end
 
   def index
-    render json: Current.company.trips.order(created_at: :desc)
+    trips = if Current.user.admin?
+      Current.company.trips
+    else
+      Current.company.trips.where(driver_id: Current.user.id)
+    end
+
+    render json: trips.order(created_at: :desc).as_json(
+      methods: [:duration_minutes],
+      include: [:vehicle, :route]
+    )
   end
 
   def summary
+    authorize!(@trip)
     render json: Trips::SummaryService.new(trip: @trip).call
+  end
+
+  def monthly_summary
+    year = params[:year]&.to_i || Time.current.year
+    month = params[:month]&.to_i || Time.current.month
+
+    summary = if Current.user.admin?
+      Trips::MonthlySummaryService.new(company: Current.company, year: year, month: month).call
+    else
+      Trips::MonthlySummaryService.new(
+        company: Current.company,
+        year: year,
+        month: month,
+        driver: Current.user
+      ).call
+    end
+
+    render json: summary
   end
 
   private
 
   def set_trip
-    @trip = Current.company.trips.find(params[:id])
+    scope = Current.user.admin? ? Current.company.trips : Current.company.trips.where(driver_id: Current.user.id)
+    @trip = scope.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Trip not found" }, status: :not_found
   end
 
   def trip_params

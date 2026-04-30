@@ -1,32 +1,24 @@
 class Api::OnboardingController < ApplicationController
   skip_before_action :authenticate_user!, only: [:signup]
+  skip_before_action :check_setup_complete, only: [:signup]
 
   def signup
-    # Step 1: Create company
-    company = Company.new(company_params)
+    company = nil
+    admin = nil
 
-    unless company.save
-      return render json: { errors: company.errors.full_messages }, status: :unprocessable_entity
+    ActiveRecord::Base.transaction do
+      company = Company.create!(company_params)
+      Current.company = company
+
+      admin = User.new(admin_params)
+      admin.role = "admin"
+      admin.status = "active"
+      admin.company = company
+      admin.save!
     end
 
-    # Step 2: Set tenant context for admin creation
-    Current.company = company
-
-    # Step 3: Create admin user
-    admin = User.new(admin_params)
-    admin.role = "admin"
-    admin.status = "active"
-    admin.company = company
-
-    unless admin.save
-      company.destroy # Rollback company if admin fails
-      return render json: { errors: admin.errors.full_messages }, status: :unprocessable_entity
-    end
-
-    Current.company = nil
-
-    # Step 4: Generate token and auto-login
     token = generate_token(admin)
+    Current.company = nil
 
     render json: {
       message: "Company and admin created successfully",
@@ -42,6 +34,10 @@ class Api::OnboardingController < ApplicationController
         role: admin.role
       }
     }, status: :created
+
+  rescue ActiveRecord::RecordInvalid => e
+    Current.company = nil
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
 
   private
@@ -58,9 +54,8 @@ class Api::OnboardingController < ApplicationController
     payload = {
       user_id: user.id,
       company_id: user.company_id,
-      exp: 24.hours.from_now.to_i
+      exp: 7.days.from_now.to_i
     }
     JWT.encode(payload, Rails.application.credentials.secret_key_base, "HS256")
   end
 end
-
