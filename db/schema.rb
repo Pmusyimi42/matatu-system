@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_30_000006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,8 +42,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "companies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "expense_records", force: :cascade do |t|
     t.decimal "amount"
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.string "description"
     t.bigint "trip_id", null: false
@@ -53,6 +60,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
 
   create_table "fuel_records", force: :cascade do |t|
     t.decimal "amount"
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.bigint "trip_id", null: false
     t.datetime "updated_at", null: false
@@ -60,6 +68,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
   end
 
   create_table "routes", force: :cascade do |t|
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.string "destination"
     t.string "origin"
@@ -67,6 +76,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
   end
 
   create_table "shift_assignments", force: :cascade do |t|
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.bigint "driver_id", null: false
     t.string "status"
@@ -78,6 +88,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
 
   create_table "trips", force: :cascade do |t|
     t.decimal "cash_collected"
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.datetime "end_time"
     t.bigint "route_id"
@@ -85,11 +96,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.bigint "vehicle_id"
+    t.index ["company_id"], name: "index_trips_on_company_id"
     t.index ["route_id"], name: "index_trips_on_route_id"
     t.index ["vehicle_id"], name: "index_trips_on_vehicle_id"
   end
 
   create_table "users", force: :cascade do |t|
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.string "email"
     t.string "name"
@@ -97,15 +110,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
     t.string "role"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_users_on_company_id"
   end
 
   create_table "vehicles", force: :cascade do |t|
     t.integer "capacity"
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
-    t.bigint "driver_id", null: false
+    t.bigint "driver_id"
     t.string "plate_number"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_vehicles_on_company_id"
     t.index ["driver_id"], name: "index_vehicles_on_driver_id"
   end
 
@@ -115,5 +131,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_200633) do
   add_foreign_key "fuel_records", "trips"
   add_foreign_key "shift_assignments", "users", column: "driver_id"
   add_foreign_key "shift_assignments", "vehicles"
+  add_foreign_key "trips", "companies"
+  add_foreign_key "users", "companies"
+  add_foreign_key "vehicles", "companies"
   add_foreign_key "vehicles", "users", column: "driver_id"
 end

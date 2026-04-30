@@ -1,4 +1,6 @@
 class Api::UsersController < ApplicationController
+  before_action :require_admin, only: [:create]
+
   def index
     users = User.all
     render json: users
@@ -24,4 +26,11 @@ class Api::UsersController < ApplicationController
   def user_params
     params.permit(:name, :email, :password, :role, :status)
   end
+
+  def require_admin
+    unless Current.user&.admin?
+      render json: { error: "Admin access required" }, status: :forbidden
+    end
+  end
 end
+

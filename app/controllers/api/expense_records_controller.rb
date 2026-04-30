@@ -13,8 +13,9 @@ class Api::ExpenseRecordsController < ApplicationController
       render json: expense.errors, status: :unprocessable_entity
     end
   end
-  def index
-    render json: ExpenseRecord.all.order(created_at: :desc)
-  end
 
+  def index
+    render json: ExpenseRecord.order(created_at: :desc)
+  end
 end
+

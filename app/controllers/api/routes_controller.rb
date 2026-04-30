@@ -20,3 +20,4 @@ class Api::RoutesController < ApplicationController
     params.require(:route).permit(:origin, :destination)
   end
 end
+

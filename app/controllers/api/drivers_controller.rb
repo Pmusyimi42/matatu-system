@@ -1,4 +1,6 @@
 class Api::DriversController < ApplicationController
+  before_action :require_admin, only: [:create, :approve]
+
   def create
     driver = User.new(driver_params)
     driver.role = "driver"
@@ -12,20 +14,31 @@ class Api::DriversController < ApplicationController
       render json: driver.errors, status: :unprocessable_entity
     end
   end
+
   def approve
     driver = User.find(params[:id])
 
-    if driver.role == "driver"
-      driver.update(status: "active")
+    unless driver.role == "driver"
+      return render json: { error: "Not a driver" }, status: :bad_request
+    end
+
+    if driver.update(status: "active")
       render json: { message: "Driver approved successfully" }
     else
-      render json: { error: "Not a driver" }, status: :bad_request
+      render json: driver.errors, status: :unprocessable_entity
     end
-end
+  end
 
   private
 
   def driver_params
     params.require(:user).permit(:name, :email, :password, :password_confirmation)
   end
+
+  def require_admin
+    unless Current.user&.admin?
+      render json: { error: "Admin access required" }, status: :forbidden
+    end
+  end
 end
+

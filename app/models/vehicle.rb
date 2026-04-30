@@ -1,4 +1,5 @@
 class Vehicle < ApplicationRecord
+  include TenantScoped
 
   has_many :shift_assignments
   has_many :trips
@@ -11,3 +12,4 @@ class Vehicle < ApplicationRecord
     current_shift&.driver
   end
 end
+

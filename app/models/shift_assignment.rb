@@ -1,4 +1,6 @@
 class ShiftAssignment < ApplicationRecord
+  include TenantScoped
+
   belongs_to :vehicle
   belongs_to :driver, class_name: "User"
 
@@ -8,3 +10,4 @@ class ShiftAssignment < ApplicationRecord
     status == "active"
   end
 end
+

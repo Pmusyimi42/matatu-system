@@ -45,3 +45,4 @@ class Api::VehiclesController < ApplicationController
     params.require(:vehicle).permit(:plate_number, :capacity, :status, :driver_id)
   end
 end
+

@@ -1,5 +1,4 @@
 class Api::ShiftAssignmentsController < ApplicationController
-  class Api::ShiftAssignmentsController < ApplicationController
   def create
     shift = ShiftAssignment.new(shift_params)
 
@@ -16,4 +15,4 @@ class Api::ShiftAssignmentsController < ApplicationController
     params.require(:shift_assignment).permit(:vehicle_id, :driver_id, :start_time, :end_time, :status)
   end
 end
-end
+
