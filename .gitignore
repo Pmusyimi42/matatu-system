@@ -30,4 +30,14 @@
 
 # Ignore key files for decrypting credentials and more.
 /config/*.key
+# Secrets
+.env
+config/master.key
+config/credentials.yml.enc
 
+# Logs & temp
+log/*
+tmp/*
+
+# Storage (uploads)
+storage/*
