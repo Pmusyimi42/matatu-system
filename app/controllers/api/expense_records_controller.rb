@@ -1,21 +1,31 @@
 class Api::ExpenseRecordsController < ApplicationController
-  def create
-    trip = Trip.find(params[:trip_id])
+  before_action :set_trip, only: [:create, :index]
 
-    expense = trip.expense_records.new(
-      description: params[:description],
-      amount: params[:amount]
-    )
+  def create
+    expense = @trip.expense_records.new(expense_params)
 
     if expense.save
       render json: expense, status: :created
     else
-      render json: expense.errors, status: :unprocessable_entity
+      render json: { errors: expense.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
   def index
-    render json: ExpenseRecord.order(created_at: :desc)
+    expenses = @trip.expense_records.order(created_at: :desc)
+    render json: expenses
+  end
+
+  private
+
+  def set_trip
+    @trip = Trip.find(params[:trip_id])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Trip not found" }, status: :not_found
+  end
+
+  def expense_params
+    params.require(:expense_record).permit(:description, :amount)
   end
 end
 

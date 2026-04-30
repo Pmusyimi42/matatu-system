@@ -1,5 +1,6 @@
 class Api::AuthController < ApplicationController
   skip_before_action :authenticate_user!, only: [:login]
+  skip_before_action :check_setup_complete, only: [:login]
 
   def login
     user = User.find_by(email: params[:email])
@@ -37,4 +38,3 @@ class Api::AuthController < ApplicationController
     JWT.encode(payload, Rails.application.credentials.secret_key_base, "HS256")
   end
 end
-

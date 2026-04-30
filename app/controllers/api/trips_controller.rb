@@ -1,56 +1,58 @@
 class Api::TripsController < ApplicationController
+  before_action :set_trip, only: [:show, :end_trip, :summary]
+
   def create
-    vehicle = Vehicle.find(params[:trip][:vehicle_id])
-    route = Route.find(params[:trip][:route_id])
+    trip = Trips::CreateService.new(
+      company: Current.company,
+      user: Current.user,
+      params: trip_params
+    ).call
 
-    active_shift = vehicle.shift_assignments.find_by(status: "active", driver: Current.user)
-    return render json: { error: "No active shift for this vehicle" }, status: :unprocessable_entity if active_shift.nil?
+    render json: trip, status: :created
 
-    trip = Trip.new(
-      vehicle: vehicle,
-      route: route,
-      start_time: Time.current,
-      status: "active"
-    )
-
-    if trip.save
-      render json: trip, status: :created
-    else
-      render json: { errors: trip.errors.full_messages }, status: :unprocessable_entity
-    end
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def end_trip
-    trip = Trip.find(params[:id])
+    authorize!(@trip)
 
-    if params[:cash_proof_photo].blank?
-      return render json: { error: "Delivery photo is required" }, status: :unprocessable_entity
-    end
+    Trips::EndService.new(
+      company: Current.company,
+      trip: @trip,
+      params: end_trip_params
+    ).call
 
-    trip.complete_trip!(
-      cash_collected: params[:trip][:cash_collected],
-      cash_proof_photo: params[:cash_proof_photo]
-    )
+    render json: { message: "Trip closed successfully" }
 
-    render json: { message: "Trip closed successfully", trip: trip }
-  rescue ActiveRecord::RecordInvalid => e
-    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
-  end
-
-  def index
-    trips = Trip.order(created_at: :desc)
-    render json: trips
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def show
-    trip = Trip.find(params[:id])
-    render json: trip
+    authorize!(@trip)
+    render json: @trip
+  end
+
+  def index
+    render json: Current.company.trips.order(created_at: :desc)
   end
 
   def summary
-    trip = Trip.find(params[:id])
+    render json: Trips::SummaryService.new(trip: @trip).call
+  end
 
-    render json: TripSummaryService.new(trip).call, status: :ok
+  private
+
+  def set_trip
+    @trip = Current.company.trips.find(params[:id])
+  end
+
+  def trip_params
+    params.require(:trip).permit(:vehicle_id, :route_id, :cash_collected)
+  end
+
+  def end_trip_params
+    params.permit(:cash_collected, :cash_proof_photo)
   end
 end
-

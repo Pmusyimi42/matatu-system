@@ -1,16 +1,11 @@
 class Api::FuelRecordsController < ApplicationController
+  before_action :set_trip
+
   def create
-    trip = Trip.find(fuel_record_params[:trip_id])
+    return render json: { error: "Cannot add fuel to a completed trip" }, status: :unprocessable_entity if @trip.completed?
 
-    if trip.completed?
-      return render json: { error: "Cannot add fuel to a completed trip" }, status: :unprocessable_entity
-    end
-
-    fuel_record = trip.fuel_records.new(
-      amount: fuel_record_params[:amount]
-    )
-
-    fuel_record.pump_photo.attach(fuel_record_params[:pump_photo])
+    fuel_record = @trip.fuel_records.new(fuel_record_params)
+    fuel_record.pump_photo.attach(fuel_record_params[:pump_photo]) if fuel_record_params[:pump_photo].present?
 
     fuel_record.save!
 
@@ -20,14 +15,17 @@ class Api::FuelRecordsController < ApplicationController
   end
 
   def index
-    fuel_records = FuelRecord.order(created_at: :desc)
+    fuel_records = @trip ? @trip.fuel_records : FuelRecord.order(created_at: :desc)
     render json: fuel_records
   end
 
   private
 
+  def set_trip
+    @trip = Trip.find(params[:trip_id])
+  end
+
   def fuel_record_params
-    params.require(:fuel_record).permit(:trip_id, :amount, :pump_photo)
+    params.require(:fuel_record).permit(:amount, :pump_photo)
   end
 end
-

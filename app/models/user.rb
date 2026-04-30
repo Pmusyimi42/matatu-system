@@ -1,8 +1,9 @@
 class User < ApplicationRecord
-  include TenantScoped
+#  include TenantScoped
 
   has_secure_password
 
+  belongs_to :company
   has_many :vehicles, foreign_key: :driver_id
 
   validates :email, presence: true, uniqueness: true

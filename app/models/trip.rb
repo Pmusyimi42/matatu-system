@@ -27,20 +27,16 @@ class Trip < ApplicationRecord
   end
 
   def complete_trip!(cash_collected:, cash_proof_photo:)
-    transaction do
-      self.cash_proof_photo.attach(
-        io: cash_proof_photo[:io],
-        filename: cash_proof_photo[:filename],
-        content_type: cash_proof_photo[:content_type]
-      )
+  transaction do
+    self.cash_proof_photo.attach(cash_proof_photo)
 
-      update!(
-        cash_collected: cash_collected,
-        end_time: Time.current,
-        status: "completed"
-      )
-    end
+    update!(
+      cash_collected: cash_collected,
+      end_time: Time.current,
+      status: "completed"
+    )
   end
+end
 
   private
 

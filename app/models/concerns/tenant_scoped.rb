@@ -3,42 +3,44 @@ module TenantScoped
 
   included do
     belongs_to :company
-
     validates :company_id, presence: true
 
+    # =========================
+    # SAFE default_scope
+    # =========================
+    # Never crash background jobs, console, or ActiveStorage
     default_scope -> {
-      raise "❌ Current.company not set" unless Current.company
-      where(company_id: Current.company.id)
+      if Current.company.present?
+        where(company_id: Current.company.id)
+      else
+        all
+      end
     }
 
     before_validation :assign_company
     before_save :ensure_company_matches
   end
 
-  class_methods do
-    def unscoped(*args, &block)
-      # Allow unscoped during ActiveRecord uniqueness validations
-      if caller_locations.any? { |loc| loc.path&.include?('active_record/validations/uniqueness.rb') }
-        return super(*args, &block)
-      end
-
-      raise "❌ Unsafe: unscoped is disabled in multi-tenant mode"
-    end
-  end
-
   private
 
+  # =========================
+  # Assign company safely
+  # =========================
   def assign_company
-    self.company_id ||= Current.company!.id
+    return unless Current.company
+
+    self.company_id ||= Current.company.id
   end
 
+  # =========================
+  # Ensure tenant integrity
+  # =========================
   def ensure_company_matches
-    return unless will_save_change_to_company_id? || company_id.present?
+    return unless Current.company
 
-    if company_id != Current.company!.id
+    if company_id.present? && company_id != Current.company.id
       errors.add(:company_id, "does not match current tenant")
       throw(:abort)
     end
   end
 end
-
